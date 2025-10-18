@@ -1,6 +1,13 @@
 #include "StdAfx.h"
 #include "shlwapi.h"
 #include "../Animation/AnimationPlayer.h"
+#include "../Utils/DpiManager.h"
+
+#include <filesystem>
+#include <sstream>
+
+namespace fs = std::filesystem;
+
 
 namespace ui 
 {
@@ -25,6 +32,7 @@ Control::Control() :
 	m_renderOffset(),
 	m_cxyBorderRound(),
 	m_rcMargin(),
+	m_rcOriginalMargin(),
 	m_rcPaint(),
 	m_rcBorderSize(),
 	m_cursorType(kCursorArrow),
@@ -71,6 +79,7 @@ Control::Control(const Control& r) :
 	m_renderOffset(r.m_renderOffset),
 	m_cxyBorderRound(r.m_cxyBorderRound),
 	m_rcMargin(r.m_rcMargin),
+	m_rcOriginalMargin(r.m_rcOriginalMargin),
 	m_rcPaint(r.m_rcPaint),
 	m_rcBorderSize(r.m_rcBorderSize),
 	m_cursorType(r.m_cursorType),
@@ -370,7 +379,7 @@ void Control::SetUTF8ToolTipText(const std::string& strText)
 	StringHelper::MBCSToUnicode(strText, strOut, CP_UTF8);
 	if (strOut.empty()) {
 		m_sToolTipText = _T("");
-		Invalidate();//Ϊ����һ����ˢ
+		Invalidate();//为空则一律重刷
 		return ;
 	}
 
@@ -629,8 +638,11 @@ UiRect Control::GetMargin() const
 
 void Control::SetMargin(UiRect rcMargin, bool bNeedDpiScale)
 {
-	if (bNeedDpiScale)
+	// 保存原始值
+	if (bNeedDpiScale) {
+		m_rcOriginalMargin = rcMargin;
 		DpiManager::GetInstance()->ScaleRect(rcMargin);
+	}
 
 	if (!m_rcMargin.Equal(rcMargin)) {
 		m_rcMargin = rcMargin;
@@ -858,7 +870,7 @@ void Control::HandleMessage(EventArgs& msg)
 
 bool Control::HasHotState()
 {
-	// �жϱ��ؼ��Ƿ���hot״̬
+	// 判断本控件是否有hot状态
 	return m_colorMap.HasHotColor() || m_imageMap.HasHotImage();
 }
 
@@ -1204,6 +1216,40 @@ bool Control::OnApplyAttributeList(const std::wstring& strReceiver, const std::w
 	return true;
 }
 
+fs::path GetScaledPath(const fs::path& originalPath, int scaleFactor)
+{
+	if (scaleFactor <= 100) {
+		return originalPath; // No scaling needed
+	}
+
+	double scale = static_cast<double>(scaleFactor) / 100.0;
+	std::wstringstream ss;
+
+	std::wstring scaleStr;
+	if (scale == floor(scale)) {
+		scaleStr = std::to_wstring(static_cast<int>(scale)); // 转换为 "2"
+	}
+	else {
+		ss << std::fixed << std::setprecision(1) << scale;
+		scaleStr = ss.str(); // 转换为 "1.5"
+	}
+
+	std::wstring stem = originalPath.stem().wstring();
+	std::wstring extension = originalPath.extension().wstring();
+
+	std::wstring scaledFilename = stem + L"@" + scaleStr + L"x" + extension;
+
+	fs::path directory = originalPath.parent_path();
+	fs::path scaledPath = directory / scaledFilename;
+
+	if (fs::exists(scaledPath)) {
+		return scaledPath;
+	}
+	else {
+		return originalPath; // Fallback to original if scaled version doesn't exist
+	}
+}
+
 void Control::GetImage(Image& duiImage) const
 {
 	if (duiImage.imageCache) {
@@ -1216,8 +1262,11 @@ void Control::GetImage(Image& duiImage) const
 	}
 	imageFullPath = StringHelper::ReparsePath(imageFullPath);
 
-	if (!duiImage.imageCache || duiImage.imageCache->sImageFullPath != imageFullPath) {
-		duiImage.imageCache = GlobalManager::GetImage(imageFullPath);
+    int scale = ui::DpiManager::GetInstance()->GetScale();
+    auto scaledPath = GetScaledPath(imageFullPath, scale);
+
+	if (!duiImage.imageCache || duiImage.imageCache->sImageFullPath != scaledPath) {
+		duiImage.imageCache = GlobalManager::GetImage(scaledPath);
 	}
 }
 
@@ -1309,7 +1358,7 @@ void Control::AlphaPaint(IRenderContext* pRender, const UiRect& rcPaint)
 				SetCacheDirty(true);
 			}
 
-			// IsCacheDirty��m_bCacheDirty���岻һ��
+			// IsCacheDirty与m_bCacheDirty意义不一样
 			if (m_bCacheDirty) {
 				pCacheRender->Clear();
 				UiRect rcClip = { 0, 0, size.cx, size.cy };
@@ -1392,8 +1441,15 @@ void Control::PaintBkColor(IRenderContext* pRender)
 
 	DWORD dwBackColor = GlobalManager::GetTextColor(m_strBkColor);
 	if(dwBackColor != 0) {
-		if (dwBackColor >= 0xFF000000) pRender->DrawColor(m_rcPaint, dwBackColor);
-		else pRender->DrawColor(m_rcItem, dwBackColor);
+		// 如果有圆角，使用抗锯齿的圆角填充
+		if (m_cxyBorderRound.cx > 0 || m_cxyBorderRound.cy > 0) {
+			BYTE alpha = (dwBackColor >> 24) & 0xFF;
+			pRender->FillRoundRect(m_rcItem, m_cxyBorderRound, dwBackColor, alpha);
+		}
+		else {
+			if (dwBackColor >= 0xFF000000) pRender->DrawColor(m_rcPaint, dwBackColor);
+			else pRender->DrawColor(m_rcItem, dwBackColor);
+		}
 	}
 }
 
@@ -1547,7 +1603,7 @@ void Control::GifPlay()
 		}
 		else
 		{
-			if (lPrePause == 0 || lPause == 0) {//0��ʾGetCurrentInterval����
+			if (lPrePause == 0 || lPause == 0) {//0表示GetCurrentInterval出错
 				m_bkImage.SetPlaying(false);
 				m_gifWeakFlag.Cancel();
 				return;
@@ -1688,6 +1744,24 @@ void Control::DetachEvent(EventType type)
 	{
 		OnEvent.erase(event);
 	}
+}
+
+void Control::ReapplyDpi()
+{
+	// 先调用基类的 ReapplyDpi
+	PlaceHolder::ReapplyDpi();
+
+	// 重新应用 DPI 缩放到 margin
+	if (m_rcOriginalMargin.left != 0 || m_rcOriginalMargin.top != 0 ||
+		m_rcOriginalMargin.right != 0 || m_rcOriginalMargin.bottom != 0) {
+		UiRect scaledMargin = m_rcOriginalMargin;
+		DpiManager::GetInstance()->ScaleRect(scaledMargin);
+		m_rcMargin = scaledMargin;
+	}
+
+	// 重新应用 DPI 缩放到 border size
+	// border size 通常由 SetAttribute 设置，这里简单处理
+	// 如果需要更精细的控制，可以添加 m_nOriginalBorderSize 成员变量
 }
 
 } // namespace ui

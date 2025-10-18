@@ -27,13 +27,13 @@ void ClientApp::OnBeforeCommandLineProcessing(const CefString& process_type, Cef
 		command_line->AppendSwitchWithValue("ppapi-flash-version", "20.0.0.228");
 		command_line->AppendSwitchWithValue("ppapi-flash-path", "PepperFlash\\pepflashplayer.dll");
 
-		//Í¬Ò»¸öÓòÏÂµÄÊ¹ÓÃÍ¬Ò»¸öäÖÈ¾½ø³Ì
+		//åŒä¸€ä¸ªåŸŸä¸‹çš„ä½¿ç”¨åŒä¸€ä¸ªæ¸²æŸ“è¿›ç¨‹
 		command_line->AppendSwitch("process-per-site");
 		command_line->AppendSwitch("disable-gpu");
 		command_line->AppendSwitch("disable-gpu-compositing");
 		//command_line->AppendSwitchWithValue("proxy-server", "SOCKS5://127.0.0.1:1080");	
 
-		// ¿ªÆôÀëÆÁäÖÈ¾
+		// å¼€å¯ç¦»å±æ¸²æŸ“
 		if (CefManager::GetInstance()->IsEnableOffsetRender())
 		{
 			command_line->AppendSwitch("disable-surfaces");

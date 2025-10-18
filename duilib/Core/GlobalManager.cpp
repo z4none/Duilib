@@ -40,16 +40,16 @@ void GlobalManager::Startup(const std::wstring& strResourcePath, const CreateCon
 	GlobalManager::SetResourcePath(strResourcePath + theme);
 	m_createControlCallback = callback;
 
-	// ÊÊÅäDPI
+	// é€‚é…DPI
 	if (bAdaptDpi) {
 		DpiManager::GetInstance()->SetAdaptDPI();
 		DpiManager::GetInstance()->SetScale(DpiManager::GetMainMonitorDPI());
 	}
 
-	// ½âÎöÈ«¾Ö×ÊÔ´ĞÅÏ¢
+	// è§£æå…¨å±€èµ„æºä¿¡æ¯
 	LoadGlobalResource();
 
-	// ¼ÓÔØ¶àÓïÑÔÎÄ¼ş£¬Èç¹ûÊ¹ÓÃÁË×ÊÔ´Ñ¹Ëõ°üÔò´ÓÄÚ´æÖĞ¼ÓÔØÓïÑÔÎÄ¼ş
+	// åŠ è½½å¤šè¯­è¨€æ–‡ä»¶ï¼Œå¦‚æœä½¿ç”¨äº†èµ„æºå‹ç¼©åŒ…åˆ™ä»å†…å­˜ä¸­åŠ è½½è¯­è¨€æ–‡ä»¶
 	if (g_hzip) {
 		HGLOBAL hGlobal = GetData(strResourcePath + language + L"\\gdstrings.ini");
 		if (hGlobal) {
@@ -198,7 +198,7 @@ void GlobalManager::AddTextColor(const std::wstring& strName, const std::wstring
 
 DWORD GlobalManager::GetTextColor(const std::wstring& strName)
 {
-	// ±ØĞëÔÚglobal.xmlÖĞÌáÇ°¶¨Òåµ½ÑÕÉ«Öµ
+	// å¿…é¡»åœ¨global.xmlä¸­æå‰å®šä¹‰åˆ°é¢œè‰²å€¼
 	ASSERT(m_mapTextColor[strName] != 0);
 	return m_mapTextColor[strName];
 }
@@ -295,7 +295,7 @@ void GlobalManager::RemoveAllImages()
 	m_mImageHash.clear();
 }
 
-HFONT GlobalManager::AddFont(const std::wstring& strFontId, const std::wstring& strFontName, int nSize, bool bBold, bool bUnderline, bool bItalic, bool bDefault)
+HFONT GlobalManager::AddFont(const std::wstring& strFontId, const std::wstring& strFontName, int nSize, bool bBold, bool bUnderline, bool bItalic, bool bStrikeout, bool bDefault)
 {
 	std::wstring strNewFontId = strFontId;
 	if (strNewFontId.empty())
@@ -309,7 +309,7 @@ HFONT GlobalManager::AddFont(const std::wstring& strFontId, const std::wstring& 
 	static bool bOsOverXp = IsWindowsVistaOrGreater();
 	std::wstring fontName = strFontName;
 	if (fontName == L"system") {
-		fontName = bOsOverXp ? L"Î¢ÈíÑÅºÚ" : L"ĞÂËÎÌå";
+		fontName = bOsOverXp ? L"å¾®è½¯é›…é»‘" : L"æ–°å®‹ä½“";
 	}
 
 	LOGFONT lf = { 0 };
@@ -320,6 +320,7 @@ HFONT GlobalManager::AddFont(const std::wstring& strFontId, const std::wstring& 
 	if (bBold) lf.lfWeight += FW_BOLD;
 	if (bUnderline) lf.lfUnderline = TRUE;
 	if (bItalic) lf.lfItalic = TRUE;
+    if (bStrikeout) lf.lfStrikeOut = TRUE;
 	HFONT hFont = ::CreateFontIndirect(&lf);
 	if (hFont == NULL) return NULL;
 
@@ -331,6 +332,7 @@ HFONT GlobalManager::AddFont(const std::wstring& strFontId, const std::wstring& 
 	pFontInfo->bBold = bBold;
 	pFontInfo->bUnderline = bUnderline;
 	pFontInfo->bItalic = bItalic;
+    pFontInfo->bStrikeout = bStrikeout;
 	::ZeroMemory(&pFontInfo->tm, sizeof(pFontInfo->tm));
 
 	m_mCustomFonts.insert(std::make_pair(strNewFontId, pFontInfo));
@@ -364,12 +366,13 @@ HFONT GlobalManager::GetFont(const std::wstring& strFontId)
 	return nullptr;
 }
 
-HFONT GlobalManager::GetFont(const std::wstring& strFontName, int nSize, bool bBold, bool bUnderline, bool bItalic)
+HFONT GlobalManager::GetFont(const std::wstring& strFontName, int nSize, bool bBold, bool bUnderline, bool bItalic, bool bStrikeout)
 {
 	for (auto it = m_mCustomFonts.begin(); it != m_mCustomFonts.end(); it++) {
 		auto pFontInfo = it->second;
 		if (pFontInfo->sFontName == strFontName && pFontInfo->iSize == nSize &&
-			pFontInfo->bBold == bBold && pFontInfo->bUnderline == bUnderline && pFontInfo->bItalic == bItalic)
+			pFontInfo->bBold == bBold && pFontInfo->bUnderline == bUnderline && 
+			pFontInfo->bItalic == bItalic && pFontInfo->bStrikeout == bStrikeout)
 			return pFontInfo->hFont;
 	}
 	return NULL;
@@ -414,12 +417,12 @@ bool GlobalManager::FindFont(HFONT hFont)
 	return false;
 }
 
-bool GlobalManager::FindFont(const std::wstring& strFontName, int nSize, bool bBold, bool bUnderline, bool bItalic)
+bool GlobalManager::FindFont(const std::wstring& strFontName, int nSize, bool bBold, bool bUnderline, bool bItalic, bool bStrikeout)
 {
 	for (auto it = m_mCustomFonts.begin(); it != m_mCustomFonts.end(); it++) {
 		auto pFontInfo = it->second;
 		if (pFontInfo->sFontName == strFontName && pFontInfo->iSize == nSize &&
-			pFontInfo->bBold == bBold && pFontInfo->bUnderline == bUnderline && pFontInfo->bItalic == bItalic)
+			pFontInfo->bBold == bBold && pFontInfo->bUnderline == bUnderline && pFontInfo->bItalic == bItalic && pFontInfo->bStrikeout == bStrikeout)
 			return true;
 	}
 	return false;
@@ -699,10 +702,10 @@ bool GlobalManager::ImageCacheKeyCompare::operator()(const std::wstring& key1, c
 	LPCWSTR pStr1End = pStr1Begin + nLen1;
 	LPCWSTR pStr2End = pStr2Begin + nLen2;
 
-	// ÄæÏò±È½Ï
+	// é€†å‘æ¯”è¾ƒ
 	while (--pStr1End >= pStr1Begin && --pStr2End >= pStr2Begin && *pStr1End == *pStr2End);
 
-	// Á½¸ö´®¶¼ÒÑ¾­±È¹âÁË£¬ÄÇÃ´¿Ï¶¨ÏàµÈ£¬·µ»Øfalse
+	// ä¸¤ä¸ªä¸²éƒ½å·²ç»æ¯”å…‰äº†ï¼Œé‚£ä¹ˆè‚¯å®šç›¸ç­‰ï¼Œè¿”å›false
 	if (pStr1End < pStr1Begin) {
 		return false;
 	}

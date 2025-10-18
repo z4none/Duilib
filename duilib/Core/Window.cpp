@@ -83,6 +83,7 @@ Window::Window() :
 	m_defaultFontInfo.bBold = (lf.lfWeight >= FW_BOLD);
 	m_defaultFontInfo.bUnderline = (lf.lfUnderline == TRUE);
 	m_defaultFontInfo.bItalic = (lf.lfItalic == TRUE);
+	m_defaultFontInfo.bStrikeout = (lf.lfStrikeOut == TRUE);
 	::ZeroMemory(&m_defaultFontInfo.tm, sizeof(m_defaultFontInfo.tm));
 }
 
@@ -264,7 +265,7 @@ void Window::CenterWindow()
 	if (hWndCenter!=NULL)
 		hWnd=hWndCenter;
 
-	// ´¦Àí¶àÏÔÊ¾Æ÷Ä£Ê½ÏÂÆÁÄ»¾ÓÖĞ
+	// å¤„ç†å¤šæ˜¾ç¤ºå™¨æ¨¡å¼ä¸‹å±å¹•å±…ä¸­
 	MONITORINFO oMonitor = {};
 	oMonitor.cbSize = sizeof(oMonitor);
 	::GetMonitorInfo(::MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST), &oMonitor);
@@ -1141,7 +1142,7 @@ LRESULT Window::DoHandlMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, bool& ha
 		unsigned int nNumInputs = (int)wParam;
 		TOUCHINPUT* pInputs = new TOUCHINPUT[nNumInputs]; 
 
-		// Ö»¹ØĞÄµÚÒ»¸ö´¥ÃşÎ»ÖÃ
+		// åªå…³å¿ƒç¬¬ä¸€ä¸ªè§¦æ‘¸ä½ç½®
 		if (nNumInputs >= 1 && GetTouchInputInfoWrapper((HTOUCHINPUT)lParam, nNumInputs, pInputs, sizeof(TOUCHINPUT)))
 		{
 			if (pInputs[0].dwID != 0)
@@ -1208,7 +1209,7 @@ LRESULT Window::DoHandlMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, bool& ha
 			break;
 		}
 
-		// Ö»¹ØĞÄµÚÒ»¸ö´¥Ãşµã
+		// åªå…³å¿ƒç¬¬ä¸€ä¸ªè§¦æ‘¸ç‚¹
 		if (!IS_POINTER_PRIMARY_WPARAM(wParam)) {
 			handled = true;
 			break;
@@ -1269,7 +1270,7 @@ LRESULT Window::DoHandlMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, bool& ha
 
 			pControl->HandleMessageTemplate(kEventPointDown, 0, lParam, 0, pt, pressure);
 
-			// Èç¹û¿Ø¼ş²»Ö§³Ö´¦ÀíWM_POINTERUPDATEÏûÏ¢£¬Ôò²»ÉèÖÃhandled£¬³ÌĞò»á½øÈëWM_BUTTON´¦ÀíÁ÷³Ì
+			// å¦‚æœæ§ä»¶ä¸æ”¯æŒå¤„ç†WM_POINTERUPDATEæ¶ˆæ¯ï¼Œåˆ™ä¸è®¾ç½®handledï¼Œç¨‹åºä¼šè¿›å…¥WM_BUTTONå¤„ç†æµç¨‹
 			if (m_pEventPointer && m_pEventPointer->IsReceivePointerMsg()) {
 				handled = true;
 			}
@@ -1282,14 +1283,14 @@ LRESULT Window::DoHandlMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, bool& ha
 			}
 
 			m_ptLastMousePos = pt;
-			// Èç¹ûÃ»ÓĞ°´ÏÂ£¬Ôò²»ÉèÖÃhandled£¬³ÌĞò»á×ª»»ÎªWM_BUTTONÀàÏûÏ¢
+			// å¦‚æœæ²¡æœ‰æŒ‰ä¸‹ï¼Œåˆ™ä¸è®¾ç½®handledï¼Œç¨‹åºä¼šè½¬æ¢ä¸ºWM_BUTTONç±»æ¶ˆæ¯
 			if (m_pEventPointer == NULL) break;
 
 			if (!HandleMouseEnterLeave(pt, wParam, lParam)) break;
 
 			m_pEventPointer->HandleMessageTemplate(kEventPointMove, 0, 0, 0, pt, pressure);
 
-			// Èç¹û¿Ø¼ş²»Ö§³Ö´¦ÀíWM_POINTERUPDATEÏûÏ¢£¬Ôò²»ÉèÖÃhandled£¬³ÌĞò»á½øÈëWM_MOUSEMOVE´¦ÀíÁ÷³Ì
+			// å¦‚æœæ§ä»¶ä¸æ”¯æŒå¤„ç†WM_POINTERUPDATEæ¶ˆæ¯ï¼Œåˆ™ä¸è®¾ç½®handledï¼Œç¨‹åºä¼šè¿›å…¥WM_MOUSEMOVEå¤„ç†æµç¨‹
 			if (m_pEventPointer && m_pEventPointer->IsReceivePointerMsg()) {
 				handled = true;
 			}
@@ -1298,13 +1299,13 @@ LRESULT Window::DoHandlMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, bool& ha
 		case WM_POINTERLEAVE:
 		case WM_POINTERCAPTURECHANGED:
 			m_ptLastMousePos = pt;
-			// Èç¹ûÃ»ÓĞ°´ÏÂ£¬Ôò²»ÉèÖÃhandled£¬³ÌĞò»á×ª»»ÎªWM_BUTTONÀàÏûÏ¢
+			// å¦‚æœæ²¡æœ‰æŒ‰ä¸‹ï¼Œåˆ™ä¸è®¾ç½®handledï¼Œç¨‹åºä¼šè½¬æ¢ä¸ºWM_BUTTONç±»æ¶ˆæ¯
 			ReleaseCapture();
 			if (m_pEventPointer == NULL) break;
 
 			m_pEventPointer->HandleMessageTemplate(kEventPointUp, 0, lParam, 0, pt, pressure);
 
-			// Èç¹û¿Ø¼ş²»Ö§³Ö´¦ÀíWM_POINTERUPDATEÏûÏ¢£¬Ôò²»ÉèÖÃhandled£¬³ÌĞò»á½øÈëWM_BUTTON´¦ÀíÁ÷³Ì
+			// å¦‚æœæ§ä»¶ä¸æ”¯æŒå¤„ç†WM_POINTERUPDATEæ¶ˆæ¯ï¼Œåˆ™ä¸è®¾ç½®handledï¼Œç¨‹åºä¼šè¿›å…¥WM_BUTTONå¤„ç†æµç¨‹
 			if (m_pEventPointer && m_pEventPointer->IsReceivePointerMsg()) {
 				handled = true;
 			}
@@ -1757,7 +1758,7 @@ void Window::Paint()
 	UiRect rcWindow;
 	::GetWindowRect(m_hWnd, &rcWindow);
 
-	//Ê¹ÓÃ²ã´°¿ÚÊ±£¬´°¿Ú²¿·ÖÔÚÆÁÄ»ÍâÊ±£¬»ñÈ¡µ½µÄÎŞĞ§ÇøÓò½ö½öÊÇÆÁÄ»ÄÚµÄ²¿·Ö£¬ÕâÀï×öĞŞÕı´¦Àí
+	//ä½¿ç”¨å±‚çª—å£æ—¶ï¼Œçª—å£éƒ¨åˆ†åœ¨å±å¹•å¤–æ—¶ï¼Œè·å–åˆ°çš„æ— æ•ˆåŒºåŸŸä»…ä»…æ˜¯å±å¹•å†…çš„éƒ¨åˆ†ï¼Œè¿™é‡Œåšä¿®æ­£å¤„ç†
 	if (m_bIsLayeredWindow) {
 		int xScreen = GetSystemMetrics(SM_XVIRTUALSCREEN);
 		int yScreen = GetSystemMetrics(SM_YVIRTUALSCREEN);
@@ -1805,7 +1806,7 @@ void Window::Paint()
 	int height = rcClient.bottom - rcClient.top;
 	if (m_renderContext->Resize(width, height))
 	{
-		// Ê¹ÓÃÒõÓ°ºó»áĞŞ²¹alphaÍ¨µÀ£¬¾Í²»ĞèÒªÉèÖÃÍ¸Ã÷ÊôĞÔÁË
+		// ä½¿ç”¨é˜´å½±åä¼šä¿®è¡¥alphaé€šé“ï¼Œå°±ä¸éœ€è¦è®¾ç½®é€æ˜å±æ€§äº†
 		m_renderContext->SetRenderTransparent(!m_shadow.IsShadowAttached());
 		rcPaint.left = 0;
 		rcPaint.top = 0;
@@ -1813,27 +1814,27 @@ void Window::Paint()
 		rcPaint.bottom = height;
 	}
 
-	// È¥µôalphaÍ¨µÀ
+	// å»æ‰alphaé€šé“
 	if (m_bIsLayeredWindow) {
 		m_renderContext->ClearAlpha(rcPaint);
 	}
 
-	// »æÖÆ
+	// ç»˜åˆ¶
 	AutoClip rectClip(m_renderContext.get(), rcPaint, true);
 	CPoint ptOldWindOrg = m_renderContext->OffsetWindowOrg(m_renderOffset);
 	m_pRoot->Paint(m_renderContext.get(), rcPaint);
 	m_pRoot->PaintChild(m_renderContext.get(), rcPaint);
 	m_renderContext->SetWindowOrg(ptOldWindOrg);
 
-	// alphaĞŞ¸´
+	// alphaä¿®å¤
 	if (m_bIsLayeredWindow) {
 		if (m_shadow.IsShadowAttached() && m_renderOffset.x == 0 && m_renderOffset.y == 0) {
-			//²¹¾ÈÓÉÓÚGdi»æÖÆÔì³ÉµÄalphaÍ¨µÀÎª0
+			//è¡¥æ•‘ç”±äºGdiç»˜åˆ¶é€ æˆçš„alphaé€šé“ä¸º0
 			UiRect rcNewPaint = rcPaint;
 			rcNewPaint.Intersect(m_pRoot->GetPaddingPos());
 			UiRect rcRootPadding = m_pRoot->GetLayout()->GetPadding();
 
-			//¿¼ÂÇÔ²½Ç
+			//è€ƒè™‘åœ†è§’
 			rcRootPadding.left += 1;
 			rcRootPadding.top += 1;
 			rcRootPadding.right += 1;
@@ -1856,7 +1857,7 @@ void Window::Paint()
 		}
 	}
 
-	// äÖÈ¾µ½´°¿Ú
+	// æ¸²æŸ“åˆ°çª—å£
 	if (m_bIsLayeredWindow) {
 		CPoint pt(rcWindow.left, rcWindow.top);
 		CSize szWindow(rcClient.right - rcClient.left, rcClient.bottom - rcClient.top);

@@ -7,6 +7,7 @@ PlaceHolder::PlaceHolder() :
 	m_pWindow(nullptr),
 	m_sName(),
 	m_cxyFixed(DUI_LENGTH_STRETCH, DUI_LENGTH_STRETCH),
+	m_cxyOriginalFixed(DUI_LENGTH_STRETCH, DUI_LENGTH_STRETCH),
 	m_cxyMin(-1, -1),
 	m_cxyMax(9999999, 9999999),
 	m_pParent(nullptr),
@@ -28,6 +29,7 @@ PlaceHolder::PlaceHolder(const PlaceHolder& r) :
 	m_pWindow(nullptr),
 	m_sName(r.m_sName),
 	m_cxyFixed(r.m_cxyFixed),
+	m_cxyOriginalFixed(r.m_cxyOriginalFixed),
 	m_cxyMin(r.m_cxyMin),
 	m_cxyMax(r.m_cxyMax),
 	m_pParent(nullptr),
@@ -147,8 +149,18 @@ void PlaceHolder::SetFixedWidth(int cx, bool bArrange, bool bNeedDpiScale)
 		return;
 	}
 
-	if (bNeedDpiScale && cx > 0)
+	// 保存原始值
+	if (bNeedDpiScale && cx > 0) {
+		m_cxyOriginalFixed.cx = cx;
 		DpiManager::GetInstance()->ScaleInt(cx);
+	}
+	else if (cx > 0) {
+		// 如果不需要缩放，可能是已经缩放后的值，不更新原始值
+	}
+	else {
+		// 特殊值（STRETCH 或 AUTO）
+		m_cxyOriginalFixed.cx = cx;
+	}
 
 	if (m_cxyFixed.cx != cx)
 	{
@@ -177,8 +189,18 @@ void PlaceHolder::SetFixedHeight(int cy, bool bNeedDpiScale)
 		return;
 	}
 
-	if (bNeedDpiScale && cy > 0)
+	// 保存原始值
+	if (bNeedDpiScale && cy > 0) {
+		m_cxyOriginalFixed.cy = cy;
 		DpiManager::GetInstance()->ScaleInt(cy);
+	}
+	else if (cy > 0) {
+		// 如果不需要缩放，可能是已经缩放后的值，不更新原始值
+	}
+	else {
+		// 特殊值（STRETCH 或 AUTO）
+		m_cxyOriginalFixed.cy = cy;
+	}
 
 	if (m_cxyFixed.cy != cy)
 	{
@@ -343,7 +365,7 @@ void PlaceHolder::ArrangeAncestor()
 		{
 			parent->ArrangeSelf();
 		}
-		else	//˵��root����AutoAdjustSize����
+		else	//说明root具有AutoAdjustSize属性
 		{
 			m_pWindow->GetRoot()->ArrangeSelf();
 		}
@@ -407,7 +429,7 @@ CPoint PlaceHolder::GetScrollOffset() const
 	}
 
 	if (parent) {
-		//˵���ؼ���Listbox�ڲ�
+		//说明控件在Listbox内部
 		ScrollableBox* listbox = (ScrollableBox*)parent;
 		scrollPos.x = listbox->GetScrollPos().cx;
 		scrollPos.y = listbox->GetScrollPos().cy;
@@ -424,6 +446,51 @@ bool PlaceHolder::IsChild(PlaceHolder* pAncestor, PlaceHolder* pControl)
 	}
 
 	return pControl != nullptr;
+}
+
+void PlaceHolder::SetOriginalFixedWidth(int cx)
+{
+	m_cxyOriginalFixed.cx = cx;
+}
+
+int PlaceHolder::GetOriginalFixedWidth() const
+{
+	return m_cxyOriginalFixed.cx;
+}
+
+void PlaceHolder::SetOriginalFixedHeight(int cy)
+{
+	m_cxyOriginalFixed.cy = cy;
+}
+
+int PlaceHolder::GetOriginalFixedHeight() const
+{
+	return m_cxyOriginalFixed.cy;
+}
+
+void PlaceHolder::ReapplyDpi()
+{
+	// 重新应用 DPI 缩放到固定宽度
+	if (m_cxyOriginalFixed.cx > 0) {
+		int scaledWidth = m_cxyOriginalFixed.cx;
+		DpiManager::GetInstance()->ScaleInt(scaledWidth);
+		SetFixedWidth(scaledWidth, false, false); // 不重新排列，不再次缩放
+	}
+	else if (m_cxyOriginalFixed.cx == DUI_LENGTH_STRETCH || m_cxyOriginalFixed.cx == DUI_LENGTH_AUTO) {
+		// 特殊值不需要缩放
+		m_cxyFixed.cx = m_cxyOriginalFixed.cx;
+	}
+
+	// 重新应用 DPI 缩放到固定高度
+	if (m_cxyOriginalFixed.cy > 0) {
+		int scaledHeight = m_cxyOriginalFixed.cy;
+		DpiManager::GetInstance()->ScaleInt(scaledHeight);
+		SetFixedHeight(scaledHeight, false); // 不再次缩放
+	}
+	else if (m_cxyOriginalFixed.cy == DUI_LENGTH_STRETCH || m_cxyOriginalFixed.cy == DUI_LENGTH_AUTO) {
+		// 特殊值不需要缩放
+		m_cxyFixed.cy = m_cxyOriginalFixed.cy;
+	}
 }
 
 }

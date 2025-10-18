@@ -78,7 +78,7 @@ LRESULT WindowImplBase::OnWindowPosChanging(UINT uMsg, WPARAM wParam, LPARAM lPa
 	if (IsZoomed(m_hWnd))
 	{
 		LPWINDOWPOS lpPos = (LPWINDOWPOS)lParam;
-		if (lpPos->flags & SWP_FRAMECHANGED) // µÚÒ»´Î×î´ó»¯£¬¶ø²»ÊÇ×î´ó»¯Ö®ºóËù´¥·¢µÄWINDOWPOSCHANGE
+		if (lpPos->flags & SWP_FRAMECHANGED) // ç¬¬ä¸€æ¬¡æœ€å¤§åŒ–ï¼Œè€Œä¸æ˜¯æœ€å¤§åŒ–ä¹‹åæ‰€è§¦å‘çš„WINDOWPOSCHANGE
 		{
 			POINT pt = { 0, 0 };
 			HMONITOR hMontorPrimary = MonitorFromPoint(pt, MONITOR_DEFAULTTOPRIMARY);
@@ -86,7 +86,7 @@ LRESULT WindowImplBase::OnWindowPosChanging(UINT uMsg, WPARAM wParam, LPARAM lPa
 
 			if (hMonitorTo != hMontorPrimary)
 			{
-				// ½â¾öÎŞ±ß¿ò´°¿ÚÔÚË«ÆÁÏÂÃæ£¨¸±ÆÁ·Ö±æÂÊ´óÓÚÖ÷ÆÁ£©Ê±£¬×î´ó»¯²»ÕıÈ·µÄÎÊÌâ
+				// è§£å†³æ— è¾¹æ¡†çª—å£åœ¨åŒå±ä¸‹é¢ï¼ˆå‰¯å±åˆ†è¾¨ç‡å¤§äºä¸»å±ï¼‰æ—¶ï¼Œæœ€å¤§åŒ–ä¸æ­£ç¡®çš„é—®é¢˜
 				MONITORINFO  miTo = { sizeof(miTo), 0 };
 				GetMonitorInfo(hMonitorTo, &miTo);
 
@@ -191,7 +191,7 @@ LRESULT WindowImplBase::OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		lpMMI->ptMaxSize.y = rcMaximize.GetHeight();
 	} 
 	else {
-		// ¼ÆËã×î´ó»¯Ê±£¬ÕıÈ·µÄÔ­µã×ø±ê
+		// è®¡ç®—æœ€å¤§åŒ–æ—¶ï¼Œæ­£ç¡®çš„åŸç‚¹åæ ‡
 		lpMMI->ptMaxPosition.x	= rcWork.left;
 		lpMMI->ptMaxPosition.y	= rcWork.top;
 		lpMMI->ptMaxSize.x = rcWork.GetWidth();
@@ -231,15 +231,58 @@ LRESULT WindowImplBase::OnDpiChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 {
 	bHandled = FALSE;
 
-	// ÖØÖÃÈ«¾Ö DPI Éè¶¨
-	DpiManager::GetInstance()->SetScale(LOWORD(wParam));
+	// æ­¥éª¤ 1ï¼šæ›´æ–°å…¨å±€ DPI è®¾å®š
+	UINT newDPI = LOWORD(wParam);
+	DpiManager::GetInstance()->SetScale(newDPI);
 
-	// ÖØÖÃÒõÓ°·¶Î§
+	// æ­¥éª¤ 2ï¼šé‡ç½®é˜´å½±èŒƒå›´
 	m_shadow.ResetShadowBox();
 
-	// TODO ¶Ô´°¿Ú´óĞ¡½øĞĞ½øĞĞ¸Ä±ä£¬ÈÃËùÓĞ¿Ø¼şÖØĞÂ¸ù¾İ DPI ¼ÆËã´óĞ¡
+	// æ­¥éª¤ 3ï¼šè°ƒæ•´çª—å£å¤§å°ï¼ˆä½¿ç”¨ Windows å»ºè®®çš„å°ºå¯¸ï¼‰
+	RECT* prcNewWindow = (RECT*)lParam;
+	if (prcNewWindow)
+	{
+		::SetWindowPos(GetHWND(),
+					  NULL,
+					  prcNewWindow->left,
+					  prcNewWindow->top,
+					  prcNewWindow->right - prcNewWindow->left,
+					  prcNewWindow->bottom - prcNewWindow->top,
+					  SWP_NOZORDER | SWP_NOACTIVATE);
+	}
+
+	// æ­¥éª¤ 4ï¼šé€’å½’éå†æ‰€æœ‰æ§ä»¶ï¼Œé‡æ–°åº”ç”¨ DPI ç¼©æ”¾
+	Control* pRoot = GetRoot();
+	if (pRoot)
+	{
+		ReapplyDpiToAllControls(pRoot);
+
+		// æ­¥éª¤ 5ï¼šè§¦å‘å¸ƒå±€é‡æ’
+		pRoot->ArrangeAncestor();
+		pRoot->Invalidate();
+	}
 
 	return 0;
+}
+
+// é€’å½’éå†æ‰€æœ‰æ§ä»¶ï¼Œé‡æ–°åº”ç”¨ DPI ç¼©æ”¾
+void WindowImplBase::ReapplyDpiToAllControls(Control* pControl)
+{
+	if (!pControl) return;
+
+	// è°ƒç”¨æ§ä»¶çš„ ReapplyDpi æ–¹æ³•
+	pControl->ReapplyDpi();
+
+	// å¦‚æœæ˜¯å®¹å™¨ï¼Œé€’å½’å¤„ç†å­æ§ä»¶
+	Box* pBox = dynamic_cast<Box*>(pControl);
+	if (pBox)
+	{
+		for (int i = 0; i < pBox->GetCount(); i++)
+		{
+			Control* pChild = pBox->GetItemAt(i);
+			ReapplyDpiToAllControls(pChild);
+		}
+	}
 }
 
 LRESULT WindowImplBase::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)

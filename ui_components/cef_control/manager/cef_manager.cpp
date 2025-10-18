@@ -45,11 +45,11 @@ bool CefMessageLoopDispatcher::Dispatch(const MSG &msg)
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-// ·¢ÏÖÒ»¸ö·Ç³£ÆæİâµÄbug£¬ÀëÆÁäÖÈ¾+¶àÏß³ÌÏûÏ¢Ñ­»·Ä£Ê½ÏÂ£¬ÔÚä¯ÀÀÆ÷¶ÔÏóÉÏÓÒ»÷µ¯³ö²Ëµ¥£¬ÊÇÎŞ·¨Õı³£¹Ø±ÕµÄ
-// ·­cefÔ´Âëºó·¢ÏÖ²Ëµ¥ÊÇÓÃTrackPopupMenuº¯Êı´´½¨µÄ£¬ÔÚMSDN×ÊÁÏÉÏ²é¿´ºó·¢ÏÖµ÷ÓÃTrackPopupMenuÇ°
-// ĞèÒª¸øÆä¸¸´°¿Úµ÷ÓÃSetForegroundWindow¡£µ«ÊÇÔÚcefÔ´ÂëÖĞÃ»ÓĞµ÷ÓÃ
-// ×îÖÕ·­cefÔ´ÂëºóµÃµ½µÄ½â¾ö·½·¨ÊÇÔÚcefµÄUIÏß³Ì´´½¨Ò»¸ö´°¿Ú£¬Õâ¸ö´°ÌåµÄ¸¸´°¿Ú±ØĞëÊÇÔÚÖ÷³ÌĞòUIÏß³Ì´´½¨µÄ
-// ÕâÑù²Ù×÷Ö®ºó¾Í²»»á³öÏÖ²Ëµ¥ÎŞ·¨¹Ø±ÕµÄbugÁË£¬ËäÈ»²»ÖªµÀÎªÊ²Ã´µ«ÊÇbug½â¾öÁË
+// å‘ç°ä¸€ä¸ªéå¸¸å¥‡è‘©çš„bugï¼Œç¦»å±æ¸²æŸ“+å¤šçº¿ç¨‹æ¶ˆæ¯å¾ªç¯æ¨¡å¼ä¸‹ï¼Œåœ¨æµè§ˆå™¨å¯¹è±¡ä¸Šå³å‡»å¼¹å‡ºèœå•ï¼Œæ˜¯æ— æ³•æ­£å¸¸å…³é—­çš„
+// ç¿»cefæºç åå‘ç°èœå•æ˜¯ç”¨TrackPopupMenuå‡½æ•°åˆ›å»ºçš„ï¼Œåœ¨MSDNèµ„æ–™ä¸ŠæŸ¥çœ‹åå‘ç°è°ƒç”¨TrackPopupMenuå‰
+// éœ€è¦ç»™å…¶çˆ¶çª—å£è°ƒç”¨SetForegroundWindowã€‚ä½†æ˜¯åœ¨cefæºç ä¸­æ²¡æœ‰è°ƒç”¨
+// æœ€ç»ˆç¿»cefæºç åå¾—åˆ°çš„è§£å†³æ–¹æ³•æ˜¯åœ¨cefçš„UIçº¿ç¨‹åˆ›å»ºä¸€ä¸ªçª—å£ï¼Œè¿™ä¸ªçª—ä½“çš„çˆ¶çª—å£å¿…é¡»æ˜¯åœ¨ä¸»ç¨‹åºUIçº¿ç¨‹åˆ›å»ºçš„
+// è¿™æ ·æ“ä½œä¹‹åå°±ä¸ä¼šå‡ºç°èœå•æ— æ³•å…³é—­çš„bugäº†ï¼Œè™½ç„¶ä¸çŸ¥é“ä¸ºä»€ä¹ˆä½†æ˜¯bugè§£å†³äº†
 void FixContextMenuBug(HWND hwnd)
 {
 	CreateWindow(L"Static", L"", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
@@ -74,31 +74,31 @@ void CefManager::AddCefDllToPath()
 	
 	std::wstring cef_path = nbase::win32::GetCurrentModuleDirectory();
 #ifdef _DEBUG
-	//cef_path += L"cef_debug"; // ÏÖÔÚ¼´Ê¹ÔÚdebugÄ£Ê½ÏÂÒ²Ê¹ÓÃcef release°æ±¾µÄdll£¬ÎªÁËÆÁ±ÎµôcefÍË³öÊ±µÄÖĞ¶Ï£¬Èç¹û²»ĞèÒªµ÷ÊÔcefµÄ¹¦ÄÜ²»ĞèÒªÊ¹ÓÃdebug°æ±¾µÄdll
+	//cef_path += L"cef_debug"; // ç°åœ¨å³ä½¿åœ¨debugæ¨¡å¼ä¸‹ä¹Ÿä½¿ç”¨cef releaseç‰ˆæœ¬çš„dllï¼Œä¸ºäº†å±è”½æ‰cefé€€å‡ºæ—¶çš„ä¸­æ–­ï¼Œå¦‚æœä¸éœ€è¦è°ƒè¯•cefçš„åŠŸèƒ½ä¸éœ€è¦ä½¿ç”¨debugç‰ˆæœ¬çš„dll
 	cef_path += L"cef";
 #else
 	cef_path += L"cef";
 #endif
 	if (!nbase::FilePathIsExist(cef_path, true))
 	{
-		MessageBox(NULL, L"Çë½âÑ¹Cef.rarÑ¹Ëõ°ü", L"ÌáÊ¾", MB_OK);
+		MessageBox(NULL, L"è¯·è§£å‹Cef.rarå‹ç¼©åŒ…", L"æç¤º", MB_OK);
 		exit(0);
 	}
 	std::wstring new_envirom(cef_path);
 	new_envirom.append(L";").append(path_envirom);
 	SetEnvironmentVariable(L"path", new_envirom.c_str());
 
-	// ½â¾ö²¥·Åflashµ¯³öºÚ¿òµÄÎÊÌâ
+	// è§£å†³æ’­æ”¾flashå¼¹å‡ºé»‘æ¡†çš„é—®é¢˜
 	// https://blog.csdn.net/zhuhongshu/article/details/77482985
 	std::wstring cmd_path = cef_path + L"\\dummy_cmd.exe";
 	SetEnvironmentVariable(L"ComSpec", cmd_path.c_str());
 }
 
-// CefµÄ³õÊ¼»¯½Ó¿Ú£¬Í¬Ê±±¸×¢ÁËÊ¹ÓÃ¸÷¸ö°æ±¾µÄCefÊ±Óöµ½µÄ¸÷ÖÖ¿Ó
-// Cef1916°æ±¾½ÏÎÈ¶¨£¬¸÷¸ö¹¦ÄÜÊ¹ÓÃÕı³££¬µ«ÊÇÄ³Ğ©ÔÚdebugÄ£Ê½ÍøÒ³´ò¿ªÊ±»á³öÖĞ¶Ï¾¯¸æ£¨µ«²¢²»ÊÇ´íÎó£©£¬¿ÉÄÜÊÇÒòÎª¶ÔĞÂhtml±ê×¼Ö§³Ö²»¹»£¬µ«ÊÇÔÚreleaseÄ£Ê½ÏÂÕı³£Ê¹ÓÃ
-// Cef2357°æ±¾ÎŞ·¨Ê¹ÓÃ£¬µ±³ÌĞò´¦ÀíÖØ¶¨ÏòĞÅÏ¢²¢ÇÒÖØĞÂ¼ÓÔØÒ³Ãæºó£¬äÖÈ¾½ø³Ì»á±Àµô
-// Cef2526¡¢2623°æ±¾¶Ô¸÷ÖÖĞÂÒ³Ãæ¶¼Ö§³Ö£¬Î¨Ò»µÄ¿Ó¾ÍÊÇdebugÄ£Ê½ÔÚ¶àÏß³ÌÏûÏ¢Ñ­»·¿ªÆôÏÂ£¬³ÌĞòÍË³öÊ±»áÖĞ¶Ï£¬µ«ÊÇreleaseÄ£Ê½Õı³£¡£
-//		(PS:Èç¹û¿ª·¢Õß²»Ê¹ÓÃ¸ºÔğCef¹¦ÄÜµÄ¿ª·¢£¬¿ÉÒÔÇĞ»»µ½releaseÄ£Ê½µÄcef dllÎÄ¼ş£¬ÕâÑù¼´Ê¹ÔÚdeubgÏÂÒ²²»»á±¨´í£¬ĞŞ¸ÄAddCefDllToPath´úÂë¿ÉÒÔÇĞ»»µ½releaseÄ¿Â¼)
+// Cefçš„åˆå§‹åŒ–æ¥å£ï¼ŒåŒæ—¶å¤‡æ³¨äº†ä½¿ç”¨å„ä¸ªç‰ˆæœ¬çš„Cefæ—¶é‡åˆ°çš„å„ç§å‘
+// Cef1916ç‰ˆæœ¬è¾ƒç¨³å®šï¼Œå„ä¸ªåŠŸèƒ½ä½¿ç”¨æ­£å¸¸ï¼Œä½†æ˜¯æŸäº›åœ¨debugæ¨¡å¼ç½‘é¡µæ‰“å¼€æ—¶ä¼šå‡ºä¸­æ–­è­¦å‘Šï¼ˆä½†å¹¶ä¸æ˜¯é”™è¯¯ï¼‰ï¼Œå¯èƒ½æ˜¯å› ä¸ºå¯¹æ–°htmlæ ‡å‡†æ”¯æŒä¸å¤Ÿï¼Œä½†æ˜¯åœ¨releaseæ¨¡å¼ä¸‹æ­£å¸¸ä½¿ç”¨
+// Cef2357ç‰ˆæœ¬æ— æ³•ä½¿ç”¨ï¼Œå½“ç¨‹åºå¤„ç†é‡å®šå‘ä¿¡æ¯å¹¶ä¸”é‡æ–°åŠ è½½é¡µé¢åï¼Œæ¸²æŸ“è¿›ç¨‹ä¼šå´©æ‰
+// Cef2526ã€2623ç‰ˆæœ¬å¯¹å„ç§æ–°é¡µé¢éƒ½æ”¯æŒï¼Œå”¯ä¸€çš„å‘å°±æ˜¯debugæ¨¡å¼åœ¨å¤šçº¿ç¨‹æ¶ˆæ¯å¾ªç¯å¼€å¯ä¸‹ï¼Œç¨‹åºé€€å‡ºæ—¶ä¼šä¸­æ–­ï¼Œä½†æ˜¯releaseæ¨¡å¼æ­£å¸¸ã€‚
+//		(PS:å¦‚æœå¼€å‘è€…ä¸ä½¿ç”¨è´Ÿè´£CefåŠŸèƒ½çš„å¼€å‘ï¼Œå¯ä»¥åˆ‡æ¢åˆ°releaseæ¨¡å¼çš„cef dllæ–‡ä»¶ï¼Œè¿™æ ·å³ä½¿åœ¨deubgä¸‹ä¹Ÿä¸ä¼šæŠ¥é”™ï¼Œä¿®æ”¹AddCefDllToPathä»£ç å¯ä»¥åˆ‡æ¢åˆ°releaseç›®å½•)
 bool CefManager::Initialize(const std::wstring& app_data_dir, CefSettings &settings, bool is_enable_offset_render /*= true*/)
 {
 #if !defined(SUPPORT_CEF)
@@ -109,8 +109,8 @@ bool CefManager::Initialize(const std::wstring& app_data_dir, CefSettings &setti
 	CefMainArgs main_args(GetModuleHandle(NULL));
 	CefRefPtr<ClientApp> app(new ClientApp);
 	
-	// Èç¹ûÊÇÔÚ×Ó½ø³ÌÖĞµ÷ÓÃ£¬»á¶ÂÈûÖ±µ½×Ó½ø³ÌÍË³ö£¬²¢ÇÒexit_code·µ»Ø´óÓÚµÈÓÚ0
-	// Èç¹ûÔÚBrowser½ø³ÌÖĞµ÷ÓÃ£¬ÔòÁ¢¼´·µ»Ø-1
+	// å¦‚æœæ˜¯åœ¨å­è¿›ç¨‹ä¸­è°ƒç”¨ï¼Œä¼šå µå¡ç›´åˆ°å­è¿›ç¨‹é€€å‡ºï¼Œå¹¶ä¸”exit_codeè¿”å›å¤§äºç­‰äº0
+	// å¦‚æœåœ¨Browserè¿›ç¨‹ä¸­è°ƒç”¨ï¼Œåˆ™ç«‹å³è¿”å›-1
 	int exit_code = CefExecuteProcess(main_args, app.get(), NULL);
 	if (exit_code >= 0)
 		return false;
@@ -169,8 +169,8 @@ void CefManager::PostQuitMessage(int nExitCode)
 	return;
 #endif
 
-	// µ±ÎÒÃÇĞèÒª½áÊø½ø³ÌÊ±£¬Ç§Íò²»ÒªÖ±½Óµ÷ÓÃ::PostQuitMessage£¬ÕâÊÇ¿ÉÄÜ»¹ÓĞä¯ÀÀÆ÷¶ÔÏóÃ»ÓĞÏú»Ù
-	// Ó¦¸ÃµÈËùÓĞä¯ÀÀÆ÷¶ÔÏó¶¼Ïú»ÙºóÔÙµ÷ÓÃ::PostQuitMessage
+	// å½“æˆ‘ä»¬éœ€è¦ç»“æŸè¿›ç¨‹æ—¶ï¼Œåƒä¸‡ä¸è¦ç›´æ¥è°ƒç”¨::PostQuitMessageï¼Œè¿™æ˜¯å¯èƒ½è¿˜æœ‰æµè§ˆå™¨å¯¹è±¡æ²¡æœ‰é”€æ¯
+	// åº”è¯¥ç­‰æ‰€æœ‰æµè§ˆå™¨å¯¹è±¡éƒ½é”€æ¯åå†è°ƒç”¨::PostQuitMessage
 	if (browser_count_ == 0)
 	{
 		nbase::ThreadManager::PostTask(kThreadUI, [nExitCode]()
@@ -196,26 +196,26 @@ void CefManager::GetCefSetting(const std::wstring& app_data_dir, CefSettings &se
 
 	settings.no_sandbox = true;
 
-	// ÉèÖÃlocalstorage£¬²»ÒªÔÚÂ·¾¶Ä©Î²¼Ó"\\"£¬·ñÔòÔËĞĞÊ±»á±¨´í
+	// è®¾ç½®localstorageï¼Œä¸è¦åœ¨è·¯å¾„æœ«å°¾åŠ "\\"ï¼Œå¦åˆ™è¿è¡Œæ—¶ä¼šæŠ¥é”™
 	CefString(&settings.cache_path) = app_data_dir + L"CefLocalStorage";
 
-	// ÉèÖÃdebug logÎÄ¼şÎ»ÖÃ
+	// è®¾ç½®debug logæ–‡ä»¶ä½ç½®
 	CefString(&settings.log_file) = app_data_dir + L"cef.log";
 
-	// µ÷ÊÔÄ£ĞÍÏÂÊ¹ÓÃµ¥½ø³Ì£¬µ«ÊÇÇ§Íò²»ÒªÔÚrelease·¢²¼°æ±¾ÖĞÊ¹ÓÃ£¬¹Ù·½ÒÑ¾­²»ÍÆ¼öÊ¹ÓÃµ¥½ø³ÌÄ£Ê½
-	// cef1916°æ±¾debugÄ£Ê½:ÔÚµ¥½ø³ÌÄ£Ê½ÏÂ³ÌĞòÍË³öÊ±»á´¥·¢ÖĞ¶Ï
+	// è°ƒè¯•æ¨¡å‹ä¸‹ä½¿ç”¨å•è¿›ç¨‹ï¼Œä½†æ˜¯åƒä¸‡ä¸è¦åœ¨releaseå‘å¸ƒç‰ˆæœ¬ä¸­ä½¿ç”¨ï¼Œå®˜æ–¹å·²ç»ä¸æ¨èä½¿ç”¨å•è¿›ç¨‹æ¨¡å¼
+	// cef1916ç‰ˆæœ¬debugæ¨¡å¼:åœ¨å•è¿›ç¨‹æ¨¡å¼ä¸‹ç¨‹åºé€€å‡ºæ—¶ä¼šè§¦å‘ä¸­æ–­
 #ifdef _DEBUG
 	settings.single_process = true;
 #else
 	settings.single_process = false;
 #endif
 
-	// cef2623¡¢2526°æ±¾debugÄ£Ê½:ÔÚÊ¹ÓÃmulti_threaded_message_loopÊ±ÍË³ö³ÌĞò»á´¥·¢ÖĞ¶Ï
-	// ¼ÓÈëdisable-extensions²ÎÊı¿ÉÒÔĞŞ¸´Õâ¸öÎÊÌâ£¬µ«ÊÇ»áµ¼ÖÂÒ»Ğ©Ò³Ãæ´ò¿ªÊ±±¨´í
-	// ¿ªÆôCef¶àÏß³ÌÏûÏ¢Ñ­»·£¬¼æÈİnbase¿âÏûÏ¢Ñ­»·
+	// cef2623ã€2526ç‰ˆæœ¬debugæ¨¡å¼:åœ¨ä½¿ç”¨multi_threaded_message_loopæ—¶é€€å‡ºç¨‹åºä¼šè§¦å‘ä¸­æ–­
+	// åŠ å…¥disable-extensionså‚æ•°å¯ä»¥ä¿®å¤è¿™ä¸ªé—®é¢˜ï¼Œä½†æ˜¯ä¼šå¯¼è‡´ä¸€äº›é¡µé¢æ‰“å¼€æ—¶æŠ¥é”™
+	// å¼€å¯Cefå¤šçº¿ç¨‹æ¶ˆæ¯å¾ªç¯ï¼Œå…¼å®¹nbaseåº“æ¶ˆæ¯å¾ªç¯
 	settings.multi_threaded_message_loop = true;
 
-	// ¿ªÆôÀëÆÁäÖÈ¾
+	// å¼€å¯ç¦»å±æ¸²æŸ“
 	settings.windowless_rendering_enabled = is_enable_offset_render_;
 }
 

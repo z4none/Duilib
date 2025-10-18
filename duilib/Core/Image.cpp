@@ -525,6 +525,13 @@ bool StateColorMap::HasHotColor()
 
 void StateColorMap::PaintStatusColor(IRenderContext* pRender, UiRect rcPaint, ControlStateType stateType)
 {
+	// 检查控件是否有圆角
+	CSize borderRound = { 0, 0 };
+	if (m_pControl) {
+		borderRound = m_pControl->GetBorderRound();
+	}
+	bool bHasRound = (borderRound.cx > 0 || borderRound.cy > 0);
+
 	if (m_pControl) {
 		bool bFadeHot = m_pControl->GetAnimationManager().GetAnimationPlayer(kAnimationHot) != nullptr;
 		int nHotAlpha = m_pControl->GetHotAlpha();
@@ -532,9 +539,26 @@ void StateColorMap::PaintStatusColor(IRenderContext* pRender, UiRect rcPaint, Co
 			if ((stateType == kControlStateNormal || stateType == kControlStateHot)
 				&& !m_stateColorMap[kControlStateHot].empty()) {
 
-				pRender->DrawColor(rcPaint, m_stateColorMap[kControlStateNormal]);
-				if (nHotAlpha > 0) {
-					pRender->DrawColor(rcPaint, m_stateColorMap[kControlStateHot], nHotAlpha);
+				// 使用圆角填充或普通填充
+				if (bHasRound) {
+					// 检查 normal 颜色是否为空
+					if (!m_stateColorMap[kControlStateNormal].empty()) {
+						DWORD dwColor = GlobalManager::GetTextColor(m_stateColorMap[kControlStateNormal]);
+						BYTE alpha = (dwColor >> 24) & 0xFF;
+						pRender->FillRoundRect(rcPaint, borderRound, dwColor, alpha);
+					}
+					if (nHotAlpha > 0 && !m_stateColorMap[kControlStateHot].empty()) {
+						DWORD dwHotColor = GlobalManager::GetTextColor(m_stateColorMap[kControlStateHot]);
+						pRender->FillRoundRect(rcPaint, borderRound, dwHotColor, nHotAlpha);
+					}
+				}
+				else {
+					if (!m_stateColorMap[kControlStateNormal].empty()) {
+						pRender->DrawColor(rcPaint, m_stateColorMap[kControlStateNormal]);
+					}
+					if (nHotAlpha > 0 && !m_stateColorMap[kControlStateHot].empty()) {
+						pRender->DrawColor(rcPaint, m_stateColorMap[kControlStateHot], nHotAlpha);
+					}
 				}
 				return;
 			}
@@ -551,7 +575,21 @@ void StateColorMap::PaintStatusColor(IRenderContext* pRender, UiRect rcPaint, Co
 		stateType = kControlStateNormal;
 	}
 
-	pRender->DrawColor(rcPaint, m_stateColorMap[stateType]);
+	// 使用圆角填充或普通填充
+	if (bHasRound) {
+		// 检查颜色字符串是否为空
+		if (!m_stateColorMap[stateType].empty()) {
+			DWORD dwColor = GlobalManager::GetTextColor(m_stateColorMap[stateType]);
+			BYTE alpha = (dwColor >> 24) & 0xFF;
+			pRender->FillRoundRect(rcPaint, borderRound, dwColor, alpha);
+		}
+	}
+	else {
+		// 检查颜色字符串是否为空
+		if (!m_stateColorMap[stateType].empty()) {
+			pRender->DrawColor(rcPaint, m_stateColorMap[stateType]);
+		}
+	}
 }
 
 }

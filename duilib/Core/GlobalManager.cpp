@@ -452,6 +452,36 @@ void GlobalManager::RemoveAllFonts()
 	m_mCustomFonts.clear();
 }
 
+void GlobalManager::RecreateFonts()
+{
+	// 遍历所有字体，根据新的 DPI 重新创建字体对象
+	for (auto it = m_mCustomFonts.begin(); it != m_mCustomFonts.end(); it++) {
+		TFontInfo* pFontInfo = it->second;
+		
+		// 删除旧的字体对象
+		if (pFontInfo->hFont) {
+			::DeleteObject(pFontInfo->hFont);
+			pFontInfo->hFont = NULL;
+		}
+		
+		// 使用当前的 DPI 重新创建字体
+		LOGFONT lf = { 0 };
+		::GetObject(::GetStockObject(DEFAULT_GUI_FONT), sizeof(LOGFONT), &lf);
+		_tcscpy(lf.lfFaceName, pFontInfo->sFontName.c_str());
+		lf.lfCharSet = DEFAULT_CHARSET;
+		lf.lfHeight = -DpiManager::GetInstance()->ScaleInt(pFontInfo->iSize);
+		if (pFontInfo->bBold) lf.lfWeight = FW_BOLD;
+		if (pFontInfo->bUnderline) lf.lfUnderline = TRUE;
+		if (pFontInfo->bItalic) lf.lfItalic = TRUE;
+		if (pFontInfo->bStrikeout) lf.lfStrikeOut = TRUE;
+		
+		pFontInfo->hFont = ::CreateFontIndirect(&lf);
+		
+		// 清空字体度量信息，下次使用时会重新获取
+		::ZeroMemory(&pFontInfo->tm, sizeof(pFontInfo->tm));
+	}
+}
+
 std::wstring GlobalManager::GetDefaultDisabledTextColor()
 {
 	return m_strDefaultDisabledColor;

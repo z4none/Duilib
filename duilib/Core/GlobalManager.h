@@ -284,6 +284,12 @@ public:
 	static void RemoveAllFonts();
 
 	/**
+	 * @brief 重新创建所有字体（用于 DPI 改变时）
+	 * @return 无
+	 */
+	static void RecreateFonts();
+
+	/**
 	 * @brief 获取默认禁用状态下字体颜色
 	 * @return 默认禁用状态颜色的字符串表示，对应 global.xml 中指定颜色值
 	 */
